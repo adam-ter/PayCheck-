@@ -13,109 +13,139 @@
     <meta name="apple-mobile-web-app-title" content="PayCheck">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --brand-dark: #064e4b; /* Teal עמוק מהלוגו */
+            --brand-main: #0d9488; /* צבע ביניים */
+            --brand-light: #2dd4bf; /* Mint בהיר מהלוגו */
+            --brand-grad: linear-gradient(135deg, #064e4b 0%, #0d9488 50%, #2dd4bf 100%);
+        }
+
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent; 
+            color: #1e293b;
+        }
+
+        .brand-gradient-bg { background: var(--brand-grad); }
+        .brand-text { color: var(--brand-dark); }
+        
         .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+        .page.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: white; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.7); }
+        .btn-primary { 
+            background: var(--brand-grad); 
+            color: white; 
+            border-radius: 18px; 
+            font-weight: 800; 
+            box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.96); opacity: 0.9; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 1rem; backdrop-filter: blur(4px); }
         .modal.active { display: flex; }
     </style>
 </head>
 <body>
 
     <!-- דף 1: רשימת עבודות -->
-    <div id="pageHome" class="page active p-4 max-w-md mx-auto pb-10">
-        <header class="mb-6 mt-4 text-center">
-            <h1 class="text-3xl font-extrabold text-slate-800">העבודות שלי</h1>
+    <div id="pageHome" class="page active p-5 max-w-md mx-auto pb-10">
+        <header class="mb-8 mt-6 text-center">
+            <img src="PayCheck.png" class="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-sm" alt="Logo">
+            <h1 class="text-4xl font-extrabold brand-text tracking-tight">PayCheck</h1>
+            <p class="text-slate-400 font-semibold text-sm">העבודות שלי</p>
         </header>
 
-        <div id="jobsList" class="space-y-4 mb-8"></div>
+        <div id="jobsList" class="space-y-4 mb-10"></div>
         
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">פרופיל עבודה חדש</h2>
+        <div class="card p-6">
+            <h2 class="text-lg font-bold brand-text mb-4 border-b border-slate-100 pb-2">הוספת מקום עבודה</h2>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1 mr-1">שם המעסיק / חברה</label>
-                    <input type="text" id="newJobName" placeholder="לדוגמה: מלצרות" class="w-full p-3 bg-slate-50 rounded-xl border focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1 mr-1 uppercase">שם העסק</label>
+                    <input type="text" id="newJobName" placeholder="לדוגמה: מלצרות" class="w-full p-3.5 bg-slate-50 rounded-xl border-0 focus:ring-2 focus:ring-teal-500 outline-none font-semibold">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 mr-1">שכר שעתי (₪)</label>
-                        <input type="number" id="newJobRate" placeholder="₪" class="w-full p-3 bg-slate-50 rounded-xl border">
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1 mr-1 uppercase">שכר שעתי</label>
+                        <input type="number" id="newJobRate" placeholder="₪" class="w-full p-3.5 bg-slate-50 rounded-xl border-0 font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1 mr-1">נסיעות ליום</label>
-                        <input type="number" id="newJobTravel" value="22.60" class="w-full p-3 bg-slate-50 rounded-xl border">
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1 mr-1 uppercase">נסיעות</label>
+                        <input type="number" id="newJobTravel" value="22.60" class="w-full p-3.5 bg-slate-50 rounded-xl border-0 font-bold text-slate-600">
                     </div>
                 </div>
 
-                <div class="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-200">
-                    <p class="text-xs font-bold text-slate-500 uppercase">נתוני זיכוי מס</p>
+                <div class="bg-teal-50/50 p-4 rounded-2xl space-y-3 border border-teal-100">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-1 mr-1">מין</label>
-                            <select id="newJobGender" onchange="updateLivePoints()" class="w-full p-2 border rounded-lg text-sm font-bold bg-white">
+                            <label class="block text-[10px] font-bold text-teal-600/70 mb-1 uppercase">מין</label>
+                            <select id="newJobGender" onchange="updateLivePoints()" class="w-full p-2.5 border-0 rounded-lg text-sm font-bold bg-white text-teal-900 shadow-sm">
                                 <option value="male">זכר</option>
                                 <option value="female">נקבה</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-1 mr-1">מספר ילדים</label>
-                            <input type="number" id="newJobChildren" placeholder="0" oninput="updateLivePoints()" class="w-full p-2 border rounded-lg text-sm font-bold bg-white">
+                            <label class="block text-[10px] font-bold text-teal-600/70 mb-1 uppercase">ילדים מתחת ל-18</label>
+                            <input type="number" id="newJobChildren" placeholder="0" oninput="updateLivePoints()" class="w-full p-2.5 border-0 rounded-lg text-sm font-bold bg-white shadow-sm">
                         </div>
                     </div>
-                    <div class="space-y-2 text-sm">
-                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobSoldier" onchange="updateLivePoints()"> חייל משוחרר</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobDegree" onchange="updateLivePoints()"> בוגר תואר אקדמי</label>
+                    <div class="space-y-2 text-sm font-semibold text-teal-800">
+                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobSoldier" onchange="updateLivePoints()" class="accent-teal-600"> חייל משוחרר (3 שנים)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobDegree" onchange="updateLivePoints()" class="accent-teal-600"> בוגר תואר אקדמי</label>
                     </div>
-                    <div class="text-center pt-2 border-t flex justify-between items-center">
-                        <span class="text-xs text-slate-400">נקודות זיכוי מחושבות:</span>
-                        <span id="livePoints" class="text-sm font-extrabold text-blue-600 bg-blue-50 px-2 py-1 rounded">2.25</span>
+                    <div class="text-center pt-2 border-t border-teal-100 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-teal-600 uppercase">נקודות זיכוי</span>
+                        <span id="livePoints" class="text-sm font-extrabold text-white bg-teal-600 px-3 py-1 rounded-full shadow-sm">2.25</span>
                     </div>
                 </div>
 
-                <button onclick="createJob()" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">שמור פרופיל עבודה 💾</button>
+                <button onclick="createJob()" class="w-full py-4 btn-primary text-lg">שמור פרופיל עבודה 💾</button>
             </div>
         </div>
     </div>
 
     <!-- דף 2: מעקב משמרות -->
-    <div id="pageTracker" class="page p-4 max-w-md mx-auto pb-20">
-        <div class="flex justify-between items-center mb-4">
-            <button onclick="navTo('pageHome')" class="text-blue-600 font-bold flex items-center gap-1"><span>←</span> חזרה</button>
-            <button onclick="deleteCurrentJob()" class="text-red-500 text-xs font-bold bg-red-50 px-3 py-1 rounded-full">מחק פרופיל</button>
+    <div id="pageTracker" class="page p-5 max-w-md mx-auto pb-20">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="navTo('pageHome')" class="text-teal-600 font-extrabold flex items-center gap-1 bg-white px-4 py-2 rounded-full shadow-sm"><span>←</span> חזרה</button>
+            <button onclick="deleteCurrentJob()" class="text-red-500 text-[10px] font-bold uppercase tracking-wider bg-red-50 px-3 py-1.5 rounded-full">מחק פרופיל</button>
         </div>
 
-        <div class="bg-white rounded-3xl p-6 shadow-xl text-center mb-6 border-b-8 border-blue-600 relative overflow-hidden">
-            <h2 id="activeJobTitle" class="text-2xl font-bold text-slate-800"></h2>
-            <div class="py-8 bg-slate-50 rounded-2xl my-4">
-                <div id="timerDisplay" class="text-5xl font-mono font-bold text-slate-800" dir="ltr">00:00:00</div>
-                <button onclick="showDetailedNet()" class="mt-4 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-[11px] font-bold">
-                    נטו משוער נוכחי: <span id="netDisplay">₪ 0</span> (פירוט)
+        <div class="card p-8 text-center mb-6 relative overflow-hidden border-b-0">
+            <div class="absolute top-0 left-0 w-full h-2 brand-gradient-bg"></div>
+            <h2 id="activeJobTitle" class="text-2xl font-extrabold brand-text mb-1"></h2>
+            <div class="py-10 my-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div id="timerDisplay" class="text-6xl font-mono font-black text-slate-800 tracking-tighter" dir="ltr">00:00:00</div>
+                <button onclick="showDetailedNet()" class="mt-5 bg-teal-50 text-teal-700 px-5 py-2.5 rounded-full text-[12px] font-bold border border-teal-100 active:scale-95 transition-all">
+                    נטו משוער: <span id="netDisplay" class="font-black">₪ 0</span>
                 </button>
             </div>
-            <button id="mainBtn" class="w-full py-4 rounded-2xl text-white font-extrabold text-lg shadow-lg"></button>
+            <button id="mainBtn" class="w-full py-5 rounded-2xl text-white font-black text-xl shadow-xl transition-all"></button>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 mb-6">
-            <div class="bg-white p-3 rounded-xl border text-center shadow-sm">
-                <p class="text-[10px] text-slate-400 uppercase font-bold">ברוטו החודש</p>
-                <p id="statGross" class="font-bold text-slate-700 text-lg">₪0</p>
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <div class="card p-4 text-center">
+                <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">ברוטו החודש</p>
+                <p id="statGross" class="font-black text-slate-700 text-xl">₪0</p>
             </div>
-            <div class="bg-white p-3 rounded-xl border text-center shadow-sm">
-                <p class="text-[10px] text-slate-400 uppercase font-bold">נטו משוער</p>
-                <p id="statNet" class="font-bold text-emerald-600 text-lg">₪0</p>
+            <div class="card p-4 text-center border-teal-100 bg-teal-50/20">
+                <p class="text-[10px] text-teal-500 uppercase font-bold mb-1">נטו משוער</p>
+                <p id="statNet" class="font-black text-teal-600 text-xl">₪0</p>
             </div>
         </div>
 
-        <div id="jobHistory" class="space-y-2"></div>
+        <div id="jobHistory" class="space-y-3"></div>
     </div>
 
     <!-- מודאל פירוט -->
-    <div id="explanationModal" class="modal"><div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"><h3 class="text-lg font-bold mb-4 border-b pb-2">פירוט ניכויים</h3><div id="explanationContent" class="space-y-2 text-sm"></div><button onclick="closeModal()" class="w-full mt-6 py-3 bg-slate-800 text-white rounded-xl font-bold">סגור</button></div></div>
+    <div id="explanationModal" class="modal"><div class="card p-7 max-w-sm w-full"><h3 class="text-xl font-black brand-text mb-4 border-b pb-2">פירוט ניכויים</h3><div id="explanationContent" class="space-y-3 text-sm font-semibold text-slate-600"></div><button onclick="closeModal()" class="w-full mt-8 py-4 btn-primary">הבנתי, תודה</button></div></div>
 
     <script>
         let jobs = [];
@@ -160,7 +190,7 @@
         function createJob() {
             const name = document.getElementById('newJobName').value;
             const rate = parseFloat(document.getElementById('newJobRate').value);
-            if (!name || !rate) return alert("מלא שם עבודה ושכר");
+            if (!name || !rate) return alert("אנא הזן שם ושכר");
 
             const job = {
                 id: Date.now().toString(),
@@ -191,7 +221,7 @@
             list.innerHTML = '';
             jobs.forEach(j => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-5 rounded-2xl shadow-sm border-r-4 border-blue-500 flex justify-between items-center cursor-pointer active:bg-slate-50";
+                div.className = "card p-5 flex justify-between items-center cursor-pointer active:scale-95 transition-all border-r-8 border-r-teal-500";
                 div.onclick = () => { 
                     currentActiveJobId = j.id; 
                     document.getElementById('activeJobTitle').textContent = j.name; 
@@ -199,7 +229,7 @@
                     checkOngoing(); 
                     renderJobHistory(j.id); 
                 };
-                div.innerHTML = `<div><h3 class="font-bold text-slate-800">${j.name}</h3><p class="text-xs text-slate-400">₪${j.rate}/שעה</p></div><span class="text-blue-500">←</span>`;
+                div.innerHTML = `<div><h3 class="font-bold text-slate-800 text-lg">${j.name}</h3><p class="text-xs font-bold text-teal-600">₪${j.rate}/שעה</p></div><span class="text-teal-400 font-black">←</span>`;
                 list.appendChild(div);
             });
         }
@@ -211,7 +241,7 @@
             
             if (ongoing && ongoing.jobId === currentActiveJobId) {
                 btn.textContent = "סיים משמרת"; 
-                btn.className = "w-full py-4 rounded-2xl text-white font-bold bg-red-500 shadow-red-200 shadow-lg";
+                btn.className = "w-full py-5 rounded-2xl text-white font-black text-xl bg-red-500 shadow-lg shadow-red-200 active:scale-95 transition-all";
                 timerInterval = setInterval(() => {
                     const diff = (Date.now() - ongoing.start) / 1000;
                     document.getElementById('timerDisplay').textContent = new Date(diff * 1000).toISOString().substr(11, 8);
@@ -221,7 +251,7 @@
                 }, 1000);
             } else {
                 btn.textContent = "התחל משמרת"; 
-                btn.className = "w-full py-4 rounded-2xl text-white font-bold bg-blue-600 shadow-blue-200 shadow-lg";
+                btn.className = "w-full py-5 rounded-2xl text-white font-black text-xl btn-primary active:scale-95 transition-all";
                 document.getElementById('timerDisplay').textContent = "00:00:00";
                 document.getElementById('netDisplay').textContent = "₪ 0";
             }
@@ -235,10 +265,8 @@
                 const start = ongoing.start;
                 const end = Date.now();
                 history.push({ 
-                    id: Date.now().toString(), 
-                    jobId: currentActiveJobId, 
-                    start, end, 
-                    hours: (end - start) / 3600000, 
+                    id: Date.now().toString(), jobId: currentActiveJobId, 
+                    start, end, hours: (end - start) / 3600000, 
                     isWeekend: [5,6].includes(new Date().getDay()) 
                 });
                 saveData();
@@ -263,7 +291,7 @@
         function renderJobHistory(jobId) {
             const container = document.getElementById('jobHistory');
             const job = jobs.find(j => j.id === jobId);
-            container.innerHTML = '<p class="text-[11px] font-bold text-slate-400 uppercase mb-2">היסטוריית משמרות</p>';
+            container.innerHTML = '<p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mr-2 mb-2">משמרות אחרונות</p>';
             
             const shifts = history.filter(h => h.jobId === jobId).slice().reverse();
             let totalG = 0, totalN = 0;
@@ -276,8 +304,8 @@
             shifts.forEach(s => {
                 const res = calculateFullDetailed(s.hours, job.rate, s.isWeekend, job);
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center";
-                div.innerHTML = `<div><p class="text-xs font-bold text-slate-700">${new Date(s.start).toLocaleDateString('he-IL')}</p><p class="text-[10px] text-slate-400">${s.hours.toFixed(1)} שעות</p></div><div class="text-emerald-600 font-bold">₪${(res.net + job.travel).toFixed(0)}</div>`;
+                div.className = "card p-4 flex justify-between items-center";
+                div.innerHTML = `<div><p class="text-sm font-bold text-slate-800">${new Date(s.start).toLocaleDateString('he-IL')}</p><p class="text-[11px] font-bold text-slate-400">${s.hours.toFixed(1)} שעות</p></div><div class="text-teal-600 font-black text-lg">₪${(res.net + job.travel).toFixed(0)}</div>`;
                 container.appendChild(div);
             });
             
@@ -291,7 +319,7 @@
         }
 
         function deleteCurrentJob() {
-            if(confirm("למחוק את הפרופיל וההיסטוריה?")) {
+            if(confirm("למחוק פרופיל זה?")) {
                 jobs = jobs.filter(j => j.id !== currentActiveJobId);
                 history = history.filter(h => h.jobId !== currentActiveJobId);
                 saveData();
