@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WorkTracker Pro</title>
+    <title>PayCheck</title>
+    
+    <!-- הגדרות אייקון ואפליקציה -->
+    <link rel="icon" href="PayCheck.png">
+    <link rel="apple-touch-icon" href="PayCheck.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PayCheck">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -26,7 +34,7 @@
         <div id="jobsList" class="space-y-4 mb-8"></div>
         
         <div class="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">פרופיל עבודה חדש (101)</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">פרופיל עבודה חדש</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1 mr-1">שם המעסיק / חברה</label>
@@ -55,12 +63,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-1 mr-1">מספר ילדים (מתחת ל-18)</label>
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1 mr-1">מספר ילדים</label>
                             <input type="number" id="newJobChildren" placeholder="0" oninput="updateLivePoints()" class="w-full p-2 border rounded-lg text-sm font-bold bg-white">
                         </div>
                     </div>
                     <div class="space-y-2 text-sm">
-                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobSoldier" onchange="updateLivePoints()"> חייל משוחרר (3 שנים ראשונות)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" id="newJobSoldier" onchange="updateLivePoints()"> חייל משוחרר</label>
                         <label class="flex items-center gap-2"><input type="checkbox" id="newJobDegree" onchange="updateLivePoints()"> בוגר תואר אקדמי</label>
                     </div>
                     <div class="text-center pt-2 border-t flex justify-between items-center">
@@ -74,7 +82,7 @@
         </div>
     </div>
 
-    <!-- דף 2: מעקב משמרות (נשאר ללא שינוי מהותי בקוד הלוגי) -->
+    <!-- דף 2: מעקב משמרות -->
     <div id="pageTracker" class="page p-4 max-w-md mx-auto pb-20">
         <div class="flex justify-between items-center mb-4">
             <button onclick="navTo('pageHome')" class="text-blue-600 font-bold flex items-center gap-1"><span>←</span> חזרה</button>
@@ -82,14 +90,14 @@
         </div>
 
         <div class="bg-white rounded-3xl p-6 shadow-xl text-center mb-6 border-b-8 border-blue-600 relative overflow-hidden">
-            <h2 id="activeJobTitle" class="text-2xl font-bold text-slate-800">שם העבודה</h2>
+            <h2 id="activeJobTitle" class="text-2xl font-bold text-slate-800"></h2>
             <div class="py-8 bg-slate-50 rounded-2xl my-4">
                 <div id="timerDisplay" class="text-5xl font-mono font-bold text-slate-800" dir="ltr">00:00:00</div>
                 <button onclick="showDetailedNet()" class="mt-4 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-[11px] font-bold">
                     נטו משוער נוכחי: <span id="netDisplay">₪ 0</span> (פירוט)
                 </button>
             </div>
-            <button id="mainBtn" class="w-full py-4 rounded-2xl text-white font-extrabold text-lg shadow-lg">התחל משמרת</button>
+            <button id="mainBtn" class="w-full py-4 rounded-2xl text-white font-extrabold text-lg shadow-lg"></button>
         </div>
 
         <div class="grid grid-cols-2 gap-2 mb-6">
@@ -98,7 +106,7 @@
                 <p id="statGross" class="font-bold text-slate-700 text-lg">₪0</p>
             </div>
             <div class="bg-white p-3 rounded-xl border text-center shadow-sm">
-                <p class="text-[10px] text-slate-400 uppercase font-bold">נטו משוער (כולל נסיעות)</p>
+                <p class="text-[10px] text-slate-400 uppercase font-bold">נטו משוער</p>
                 <p id="statNet" class="font-bold text-emerald-600 text-lg">₪0</p>
             </div>
         </div>
@@ -106,28 +114,24 @@
         <div id="jobHistory" class="space-y-2"></div>
     </div>
 
-    <!-- מודאלים נשארים זהים -->
+    <!-- מודאל פירוט -->
     <div id="explanationModal" class="modal"><div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"><h3 class="text-lg font-bold mb-4 border-b pb-2">פירוט ניכויים</h3><div id="explanationContent" class="space-y-2 text-sm"></div><button onclick="closeModal()" class="w-full mt-6 py-3 bg-slate-800 text-white rounded-xl font-bold">סגור</button></div></div>
 
     <script>
-        // אתחול נתונים חכם
         let jobs = [];
         let history = [];
         let currentActiveJobId = null;
         let timerInterval;
 
-        // פונקציית טעינה שמוודאת שהנתונים נמשכים מהזיכרון בכל פתיחה
         function initApp() {
             const savedJobs = localStorage.getItem('jobProfiles');
             const savedHistory = localStorage.getItem('shiftHistory');
-            
             if (savedJobs) jobs = JSON.parse(savedJobs);
             if (savedHistory) history = JSON.parse(savedHistory);
             
             renderJobsList();
             updateLivePoints();
             
-            // בדיקה אם יש משמרת שרצה כרגע
             const ongoing = localStorage.getItem('ongoingShift');
             if (ongoing) {
                 const shiftData = JSON.parse(ongoing);
@@ -156,7 +160,7 @@
         function createJob() {
             const name = document.getElementById('newJobName').value;
             const rate = parseFloat(document.getElementById('newJobRate').value);
-            if (!name || !rate) return alert("אנא מלא שם עבודה ושכר שעתי");
+            if (!name || !rate) return alert("מלא שם עבודה ושכר");
 
             const job = {
                 id: Date.now().toString(),
@@ -167,8 +171,7 @@
                     gender: document.getElementById('newJobGender').value,
                     children: parseInt(document.getElementById('newJobChildren').value) || 0,
                     soldier: document.getElementById('newJobSoldier').checked,
-                    degree: document.getElementById('newJobDegree').checked,
-                    single: true
+                    degree: document.getElementById('newJobDegree').checked
                 }
             };
             jobs.push(job);
@@ -196,7 +199,7 @@
                     checkOngoing(); 
                     renderJobHistory(j.id); 
                 };
-                div.innerHTML = `<div><h3 class="font-bold text-slate-800">${j.name}</h3><p class="text-xs text-slate-400">₪${j.rate} לשעה</p></div><span class="text-blue-500 font-bold">←</span>`;
+                div.innerHTML = `<div><h3 class="font-bold text-slate-800">${j.name}</h3><p class="text-xs text-slate-400">₪${j.rate}/שעה</p></div><span class="text-blue-500">←</span>`;
                 list.appendChild(div);
             });
         }
@@ -211,13 +214,7 @@
                 btn.className = "w-full py-4 rounded-2xl text-white font-bold bg-red-500 shadow-red-200 shadow-lg";
                 timerInterval = setInterval(() => {
                     const diff = (Date.now() - ongoing.start) / 1000;
-                    const hours = Math.floor(diff / 3600);
-                    const minutes = Math.floor((diff % 3600) / 60);
-                    const seconds = Math.floor(diff % 60);
-                    document.getElementById('timerDisplay').textContent = 
-                        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                    
-                    // עדכון נטו בלייב
+                    document.getElementById('timerDisplay').textContent = new Date(diff * 1000).toISOString().substr(11, 8);
                     const job = jobs.find(j => j.id === currentActiveJobId);
                     const res = calculateFullDetailed(diff/3600, job.rate, false, job);
                     document.getElementById('netDisplay').textContent = `₪ ${res.net.toFixed(1)}`;
@@ -233,8 +230,7 @@
         document.getElementById('mainBtn').onclick = function() {
             const ongoing = JSON.parse(localStorage.getItem('ongoingShift'));
             if (!ongoing) {
-                const shift = { start: Date.now(), jobId: currentActiveJobId };
-                localStorage.setItem('ongoingShift', JSON.stringify(shift));
+                localStorage.setItem('ongoingShift', JSON.stringify({ start: Date.now(), jobId: currentActiveJobId }));
             } else {
                 const start = ongoing.start;
                 const end = Date.now();
@@ -258,7 +254,7 @@
             let pts = (job.tax.gender === 'female' ? 2.75 : 2.25) + job.tax.children;
             if (job.tax.soldier) pts += 2;
             if (job.tax.degree) pts += 1;
-            const ptVal = (pts * 242) / 22; // הערכה יומית
+            const ptVal = (pts * 242) / 22; 
             let incomeTax = Math.max(0, (gross * 0.1) - ptVal);
             const bLeumi = gross * 0.04;
             return { gross, pen, incomeTax, bLeumi, net: gross - pen - incomeTax - bLeumi, pts };
@@ -267,9 +263,9 @@
         function renderJobHistory(jobId) {
             const container = document.getElementById('jobHistory');
             const job = jobs.find(j => j.id === jobId);
-            container.innerHTML = '<p class="text-[11px] font-bold text-slate-400 uppercase mb-2">משמרות אחרונות</p>';
+            container.innerHTML = '<p class="text-[11px] font-bold text-slate-400 uppercase mb-2">היסטוריית משמרות</p>';
             
-            const shifts = history.filter(h => h.jobId === jobId).slice(-10).reverse();
+            const shifts = history.filter(h => h.jobId === jobId).slice().reverse();
             let totalG = 0, totalN = 0;
 
             history.filter(h => h.jobId === jobId).forEach(s => {
@@ -281,13 +277,7 @@
                 const res = calculateFullDetailed(s.hours, job.rate, s.isWeekend, job);
                 const div = document.createElement('div');
                 div.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center";
-                div.innerHTML = `
-                    <div>
-                        <p class="text-xs font-bold text-slate-700">${new Date(s.start).toLocaleDateString('he-IL')}</p>
-                        <p class="text-[10px] text-slate-400">${s.hours.toFixed(1)} שעות</p>
-                    </div>
-                    <div class="text-emerald-600 font-bold">₪${(res.net + job.travel).toFixed(0)}</div>
-                `;
+                div.innerHTML = `<div><p class="text-xs font-bold text-slate-700">${new Date(s.start).toLocaleDateString('he-IL')}</p><p class="text-[10px] text-slate-400">${s.hours.toFixed(1)} שעות</p></div><div class="text-emerald-600 font-bold">₪${(res.net + job.travel).toFixed(0)}</div>`;
                 container.appendChild(div);
             });
             
@@ -301,7 +291,7 @@
         }
 
         function deleteCurrentJob() {
-            if(confirm("למחוק פרופיל זה ואת כל היסטוריית המשמרות שלו?")) {
+            if(confirm("למחוק את הפרופיל וההיסטוריה?")) {
                 jobs = jobs.filter(j => j.id !== currentActiveJobId);
                 history = history.filter(h => h.jobId !== currentActiveJobId);
                 saveData();
@@ -311,8 +301,6 @@
         }
 
         function closeModal() { document.getElementById('explanationModal').classList.remove('active'); }
-
-        // הפעלה ראשונית
         window.onload = initApp;
     </script>
 </body>
