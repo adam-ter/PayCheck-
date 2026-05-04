@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PayCheck</title>
     
-    <!-- אפליקציה ואייקון -->
     <link rel="icon" href="PayCheck.png">
     <link rel="apple-touch-icon" href="PayCheck.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -54,7 +53,6 @@
 </head>
 <body>
 
-    <!-- דף 1: רשימת עבודות -->
     <div id="pageHome" class="page active p-5 max-w-md mx-auto pb-10">
         <header class="mb-8 mt-6 text-center">
             <img src="PayCheck.png" class="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-sm" alt="PayCheck Logo">
@@ -112,7 +110,6 @@
         </div>
     </div>
 
-    <!-- דף 2: מעקב משמרות -->
     <div id="pageTracker" class="page p-5 max-w-md mx-auto pb-20">
         <div class="flex justify-between items-center mb-6">
             <button onclick="navTo('pageHome')" class="text-teal-600 font-extrabold flex items-center gap-1 bg-white px-4 py-2 rounded-full shadow-sm active:scale-95 transition-all"><span>←</span> חזרה</button>
@@ -126,7 +123,7 @@
             <div class="py-10 my-4 bg-slate-50 rounded-3xl border border-slate-100">
                 <div id="timerDisplay" class="text-6xl font-mono font-black text-slate-800 tracking-tighter" dir="ltr">00:00:00</div>
                 <button onclick="showDetailedNet()" class="mt-5 bg-teal-50 text-teal-700 px-5 py-2.5 rounded-full text-[12px] font-bold border border-teal-100 active:scale-95 transition-all">
-                    נטו משוער כרגע: <span id="netDisplay" class="font-black">₪ 0</span> (פירוט)
+                    נטו משוער כרגע: <span id="netDisplay" class="font-black">₪ 0.00</span> (פירוט)
                 </button>
             </div>
             
@@ -136,24 +133,22 @@
         <div class="grid grid-cols-2 gap-3 mb-8">
             <div class="card p-4 text-center">
                 <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">ברוטו החודש</p>
-                <p id="statGross" class="font-black text-slate-700 text-xl">₪0</p>
+                <p id="statGross" class="font-black text-slate-700 text-xl">₪0.00</p>
             </div>
             <div class="card p-4 text-center border-teal-100 bg-teal-50/20">
                 <p class="text-[10px] text-teal-500 uppercase font-bold mb-1">נטו משוער</p>
-                <p id="statNet" class="font-black text-teal-600 text-xl">₪0</p>
+                <p id="statNet" class="font-black text-teal-600 text-xl">₪0.00</p>
             </div>
         </div>
 
         <div id="jobHistory" class="space-y-3"></div>
     </div>
 
-    <!-- מודאל פירוט ניכויים -->
     <div id="explanationModal" class="modal">
         <div class="card p-7 max-w-sm w-full animate-fadeIn">
             <h3 class="text-xl font-black brand-text mb-4 border-b pb-2">פירוט ניכויים משוער</h3>
             <div id="explanationContent" class="space-y-4 text-sm font-semibold text-slate-600">
-                <!-- תוכן דינמי -->
-            </div>
+                </div>
             <button onclick="closeModal()" class="w-full mt-8 py-4 btn-primary">סגור פירוט</button>
         </div>
     </div>
@@ -164,7 +159,6 @@
         let currentActiveJobId = null;
         let timerInterval;
 
-        // אתחול האפליקציה וטעינת נתונים
         function initApp() {
             const savedJobs = localStorage.getItem('jobProfiles');
             const savedHistory = localStorage.getItem('shiftHistory');
@@ -174,7 +168,6 @@
             renderJobsList();
             updateLivePoints();
             
-            // בדיקה אם יש משמרת פעילה שנקטעה
             const ongoing = localStorage.getItem('ongoingShift');
             if (ongoing) {
                 const shiftData = JSON.parse(ongoing);
@@ -189,7 +182,6 @@
             }
         }
 
-        // חישוב נקודות זיכוי בלייב במסך ההוספה
         function updateLivePoints() {
             const gender = document.getElementById('newJobGender').value;
             const children = parseInt(document.getElementById('newJobChildren').value) || 0;
@@ -203,7 +195,6 @@
             document.getElementById('livePoints').textContent = pts.toFixed(2);
         }
 
-        // יצירת עבודה חדשה
         function createJob() {
             const name = document.getElementById('newJobName').value;
             const rate = parseFloat(document.getElementById('newJobRate').value);
@@ -224,7 +215,6 @@
             jobs.push(job);
             saveData();
             renderJobsList();
-            // איפוס שדות
             document.getElementById('newJobName').value = '';
             document.getElementById('newJobRate').value = '';
         }
@@ -247,12 +237,11 @@
                     checkOngoing(); 
                     renderJobHistory(j.id); 
                 };
-                div.innerHTML = `<div><h3 class="font-bold text-slate-800 text-lg">${j.name}</h3><p class="text-xs font-bold text-teal-600">₪${j.rate}/שעה</p></div><span class="text-teal-400 font-black">←</span>`;
+                div.innerHTML = `<div><h3 class="font-bold text-slate-800 text-lg">${j.name}</h3><p class="text-xs font-bold text-teal-600">₪${j.rate.toFixed(2)}/שעה</p></div><span class="text-teal-400 font-black">←</span>`;
                 list.appendChild(div);
             });
         }
 
-        // לוגיקה של הטיימר והחישוב בזמן אמת
         function checkOngoing() {
             const ongoing = JSON.parse(localStorage.getItem('ongoingShift'));
             const btn = document.getElementById('mainBtn');
@@ -268,13 +257,13 @@
                     
                     const job = jobs.find(j => j.id === currentActiveJobId);
                     const res = calculateFullDetailed(diffSeconds/3600, job.rate, false, job);
-                    document.getElementById('netDisplay').textContent = `₪ ${res.net.toFixed(1)}`;
+                    document.getElementById('netDisplay').textContent = `₪ ${res.net.toFixed(2)}`;
                 }, 1000);
             } else {
                 btn.textContent = "התחל משמרת"; 
                 btn.className = "w-full py-5 rounded-2xl text-white font-black text-xl btn-primary active:scale-95 transition-all";
                 document.getElementById('timerDisplay').textContent = "00:00:00";
-                document.getElementById('netDisplay').textContent = "₪ 0";
+                document.getElementById('netDisplay').textContent = "₪ 0.00";
             }
         }
 
@@ -285,11 +274,19 @@
             } else {
                 const start = ongoing.start;
                 const end = Date.now();
+                const diffMs = end - start;
+
+                // בדיקה אם עברה לפחות דקה (60,000 מילישניות)
+                if (diffMs < 60000) {
+                    alert("משמרת חייבת להימשך לפחות דקה אחת.");
+                    return;
+                }
+
                 history.push({ 
                     id: Date.now().toString(), 
                     jobId: currentActiveJobId, 
                     start, end, 
-                    hours: (end - start) / 3600000, 
+                    hours: diffMs / 3600000, 
                     isWeekend: [5,6].includes(new Date().getDay()) 
                 });
                 saveData();
@@ -299,26 +296,18 @@
             renderJobHistory(currentActiveJobId);
         };
 
-        // מנוע החישוב המרכזי
         function calculateFullDetailed(hours, rate, isWeekend, job) {
             let gross = hours * (isWeekend ? rate * 1.5 : rate);
-            
-            // 1. פנסיה (6% עובד)
             const pen = job.pension.active ? gross * 0.06 : 0;
             
-            // 2. נקודות זיכוי (ערך נקודה ב-2024: 242 ש"ח לחודש משרה מלאה)
             let pts = (job.tax.gender === 'female' ? 2.75 : 2.25) + (job.tax.children || 0);
             if (job.tax.soldier) pts += 2;
             if (job.tax.degree) pts += 1;
             
-            // חישוב יחסי לשעה (הערכה לצורך התצוגה בלייב)
             const ptValuePerHour = (pts * 242) / 182; 
-            let incomeTaxRaw = (gross * 0.10); // מדרגה ראשונה 10%
+            let incomeTaxRaw = (gross * 0.10); 
             let incomeTax = Math.max(0, incomeTaxRaw - (ptValuePerHour * hours));
-            
-            // 3. ביטוח לאומי ומס בריאות (~4% עד תקרה מסוימת)
             const bLeumi = gross * 0.04;
-            
             const net = gross - pen - incomeTax - bLeumi;
             
             return { gross, pen, incomeTax, bLeumi, net, pts };
@@ -345,18 +334,17 @@
                 div.innerHTML = `
                     <div>
                         <p class="text-sm font-bold text-slate-800">${new Date(s.start).toLocaleDateString('he-IL')}</p>
-                        <p class="text-[11px] font-bold text-slate-400">${s.hours.toFixed(1)} שעות</p>
+                        <p class="text-[11px] font-bold text-slate-400">${s.hours.toFixed(2)} שעות</p>
                     </div>
-                    <div class="text-teal-600 font-black text-lg">₪${(res.net + job.travel).toFixed(0)}</div>
+                    <div class="text-teal-600 font-black text-lg">₪${(res.net + job.travel).toFixed(2)}</div>
                 `;
                 container.appendChild(div);
             });
             
-            document.getElementById('statGross').textContent = `₪${totalG.toFixed(0)}`;
-            document.getElementById('statNet').textContent = `₪${totalN.toFixed(0)}`;
+            document.getElementById('statGross').textContent = `₪${totalG.toFixed(2)}`;
+            document.getElementById('statNet').textContent = `₪${totalN.toFixed(2)}`;
         }
 
-        // פתיחת חלון פירוט הניכויים
         function showDetailedNet() {
             const ongoing = JSON.parse(localStorage.getItem('ongoingShift'));
             if (!ongoing) return;
@@ -368,11 +356,10 @@
             const content = document.getElementById('explanationContent');
             content.innerHTML = `
                 <div class="flex justify-between"><span>ברוטו:</span><span class="text-slate-800 font-bold">₪${res.gross.toFixed(2)}</span></div>
-                <div class="flex justify-between text-red-500"><span>הפרשה לפנסיה (6%):</span><span>-₪${res.pen.toFixed(2)}</span></div>
-                <div class="flex justify-between text-red-500"><span>מס הכנסה (אחרי זיכוי):</span><span>-₪${res.incomeTax.toFixed(2)}</span></div>
-                <div class="flex justify-between text-red-500"><span>ביטוח לאומי ומס בריאות:</span><span>-₪${res.bLeumi.toFixed(2)}</span></div>
+                <div class="flex justify-between text-red-500"><span>פנסיה (6%):</span><span>-₪${res.pen.toFixed(2)}</span></div>
+                <div class="flex justify-between text-red-500"><span>מס הכנסה:</span><span>-₪${res.incomeTax.toFixed(2)}</span></div>
+                <div class="flex justify-between text-red-500"><span>ב. לאומי ומס בריאות:</span><span>-₪${res.bLeumi.toFixed(2)}</span></div>
                 <div class="flex justify-between border-t pt-2 brand-text font-black text-lg"><span>נטו משוער:</span><span>₪${res.net.toFixed(2)}</span></div>
-                <p class="text-[10px] text-slate-400 mt-2">* החישוב מבוסס על הערכת נקודות זיכוי יחסיות ומדרגת מס ראשונה.</p>
             `;
             document.getElementById('explanationModal').classList.add('active');
         }
@@ -384,7 +371,7 @@
         }
 
         function deleteCurrentJob() {
-            if(confirm("למחוק את כל נתוני מקום העבודה הזה?")) {
+            if(confirm("למחוק פרופיל זה?")) {
                 jobs = jobs.filter(j => j.id !== currentActiveJobId);
                 history = history.filter(h => h.jobId !== currentActiveJobId);
                 saveData();
