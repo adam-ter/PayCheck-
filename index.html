@@ -56,7 +56,7 @@
         </div>
         <button type="button" onclick="showDetailedMonthlyNet()" class="mt-5 bg-teal-50 text-teal-700 px-5 py-2.5 rounded-full text-[12px] font-black border border-teal-100">ניתוח נטו חודשי 2026 📊</button>
       </div>
-      <button type="button" id="mainBtn" class="w-full py-5 rounded-2xl text-white font-black text-xl shadow-xl transition-all"></button>
+      <button type="button" id="mainBtn" onclick="handleMainButtonClick()" class="w-full py-5 rounded-2xl text-white font-black text-xl shadow-xl transition-all"></button>
     </div>
 
     <button type="button" onclick="openShiftEditor(null)" class="w-full py-4 mb-6 bg-white text-teal-700 rounded-2xl font-black border border-teal-100 shadow-sm">+ הוסף משמרת בדיעבד</button>
@@ -206,13 +206,17 @@
     function getShiftPension(job,shift){const v=shift?.fixedPension!==undefined?Number(shift.fixedPension):Number(job?.pension||0);return clamp(v,0,100)}
     function showDetailedMonthlyNet(){const job=getJob(state.currentJobId);if(!job)return alert('בחר מקום עבודה קודם');const shifts=filterCurrentMonthShifts(getJobShifts(state.currentJobId)),gross=shifts.reduce((sum,s)=>sum+calculateShiftGross(job,s),0),travel=shifts.reduce((sum,s)=>sum+getShiftTravel(job,s),0),hours=shifts.reduce((sum,s)=>sum+Number(s.hours||0),0),result=calculateTax(gross,job),finalNet=result.net+travel,hourly=hours?finalNet/hours:0,deductions=result.pension+result.bl+result.tax,deductionPercent=result.gross?((deductions/result.gross)*100).toFixed(1):'0.0';showModalContent(`<h3 class="text-xl font-black brand-text mb-4">ניתוח נטו משוער לחודש הנוכחי</h3><div class="space-y-2 text-sm font-bold"><div class="flex justify-between text-slate-800"><span>ברוטו:</span><span class="font-black">${formatMoney(result.gross)}</span></div><div class="flex justify-between text-red-500"><span>פנסיה עובד:</span><span class="font-black">- ${formatMoney(result.pension)}</span></div><div class="flex justify-between text-red-500"><span>ביטוח לאומי/בריאות:</span><span class="font-black">- ${formatMoney(result.bl)}</span></div><div class="flex justify-between text-red-500"><span>מס הכנסה:</span><span class="font-black">- ${formatMoney(result.tax)}</span></div><div class="flex justify-between text-green-600"><span>נסיעות:</span><span class="font-black">+ ${formatMoney(travel)}</span></div><div class="flex justify-between text-slate-600"><span>שעות החודש:</span><span>${hours.toFixed(2)}</span></div><div class="flex justify-between text-slate-600"><span>נטו ממוצע לשעה:</span><span>${formatMoney(hourly)}</span></div><hr class="my-3"><div class="flex justify-between text-lg text-teal-700"><span>נטו סופי:</span><span class="font-black">${formatMoney(finalNet)}</span></div></div><p class="text-[11px] text-slate-400 mt-3 font-semibold">אחוז הורדות: ${deductionPercent}%</p><p class="text-[11px] text-slate-400 mt-3 font-semibold">שים לב: זה חישוב מקורב בלבד ולא תלוש שכר רשמי.</p>`)}
 
-    function exposeGlobals(){window.__paycheckApp={openJobEditor,navTo,showDetailedMonthlyNet,openShiftEditor,togglePensionUI,saveJobProcess,deleteCurrentJob,closeModals,finalizeJobSave,continueJobSaveAfterWarnings,saveShiftProcess,deleteEditingShift};Object.assign(window,window.__paycheckApp);window.__paycheckReady=true}
+    function exposeGlobals(){window.__paycheckApp={openJobEditor,navTo,showDetailedMonthlyNet,openShiftEditor,togglePensionUI,saveJobProcess,deleteCurrentJob,closeModals,finalizeJobSave,continueJobSaveAfterWarnings,saveShiftProcess,deleteEditingShift,handleMainButtonClick};Object.assign(window,window.__paycheckApp);window.__paycheckReady=true}
     function runSelfTests(){const names=Object.keys(window.__paycheckApp||{});const missing=names.filter(n=>typeof window[n]!=='function');console.assert(!missing.length,`Missing global handlers: ${missing.join(', ')}`);console.assert(formatMoney(10)==='₪10.00','formatMoney failed');console.assert(clamp(200,0,100)===100,'clamp upper failed');console.assert(clamp(-1,0,100)===0,'clamp lower failed');const job={id:'t',name:'t',rate:50,travel:20,pension:6,isSingle:true,tax:{gender:'male',soldier:false}};const t=calculateTax(1000,job);console.assert(Number.isFinite(t.net),'calculateTax net must be finite');console.assert(t.net<=1000,'net before travel should not exceed gross');console.assert(typeof window.openJobEditor==='function','openJobEditor must be globally callable before user interaction')}
     function flushQueuedActions(){const queued=Array.isArray(window.__paycheckQueue)?window.__paycheckQueue.splice(0):[];queued.forEach(item=>{if(window.__paycheckApp&&typeof window.__paycheckApp[item.name]==='function')window.__paycheckApp[item.name].apply(null,item.args)})}
-    function initApp(){runSelfTests();loadData();renderJobsList();resetTrackerStats();resetTimerView();restoreOngoingShiftView();if(!getOngoingShift())checkOngoing();const btn=$('mainBtn');if(btn)btn.addEventListener('click',handleMainButtonClick);flushQueuedActions()}
+    let appInitialized=false;function initApp(){if(appInitialized)return;appInitialized=true;runSelfTests();loadData();renderJobsList();resetTrackerStats();resetTimerView();restoreOngoingShiftView();if(!getOngoingShift())checkOngoing();flushQueuedActions()}
 
     exposeGlobals();
-    window.addEventListener('load',initApp);
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',initApp,{once:true});
+    }else{
+      initApp();
+    }
   </script>
 </body>
 </html>
