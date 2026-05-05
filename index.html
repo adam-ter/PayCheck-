@@ -103,6 +103,13 @@
 
             <div class="py-10 my-4 bg-slate-50 rounded-3xl border border-slate-100">
                 <div id="timerDisplay" class="text-6xl font-mono font-black text-slate-800 tracking-tighter" dir="ltr">00:00:00</div>
+
+                <div id="liveGrossBox" class="hidden mt-4">
+                    <p class="text-[11px] font-black text-slate-400">הרווחת במשמרת עד עכשיו</p>
+                    <p id="liveGrossAmount" class="text-3xl font-black text-teal-600">₪0.00</p>
+                    <p class="text-[10px] font-bold text-slate-400">ברוטו</p>
+                </div>
+
                 <button onclick="showDetailedMonthlyNet()" class="mt-5 bg-teal-50 text-teal-700 px-5 py-2.5 rounded-full text-[12px] font-black border border-teal-100">
                     ניתוח נטו חודשי 2026 📊
                 </button>
@@ -118,12 +125,24 @@
         <div class="card p-5 mb-8 border-r-8 border-teal-500">
             <div class="grid grid-cols-2 gap-4 text-center">
                 <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">ברוטו מצטבר</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">ברוטו החודש</p>
                     <p id="statGross" class="font-black text-slate-800 text-lg">₪0.00</p>
                 </div>
                 <div>
                     <p class="text-[10px] font-bold text-teal-500 uppercase">נטו משוער</p>
                     <p id="statNet" class="font-black text-teal-600 text-lg">₪0.00</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">שעות החודש</p>
+                    <p id="statHours" class="font-black text-slate-800 text-lg">0.00</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">משמרות החודש</p>
+                    <p id="statShifts" class="font-black text-slate-800 text-lg">0</p>
+                </div>
+                <div class="col-span-2 bg-slate-50 rounded-2xl p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">ממוצע נטו למשמרת</p>
+                    <p id="statAvgShift" class="font-black text-teal-700 text-xl">₪0.00</p>
                 </div>
             </div>
         </div>
@@ -275,11 +294,13 @@
             set(value) { state.currentJobId = value; }
         });
 
-        window.onload = initApp;
+        window.addEventListener('load', initApp);
 
         function initApp() {
             loadData();
             renderJobsList();
+            resetTrackerStats();
+            checkOngoing();
             restoreOngoingShiftView();
         }
 
@@ -287,8 +308,26 @@
         // Storage
         // -----------------------------
         function loadData() {
-            state.jobs = readStorage(STORAGE_KEYS.jobs, []);
-            state.shifts = readStorage(STORAGE_KEYS.shifts, []);
+            const loadedJobs = readStorage(STORAGE_KEYS.jobs, []);
+            const loadedShifts = readStorage(STORAGE_KEYS.shifts, []);
+
+            state.jobs = Array.isArray(loadedJobs) ? loadedJobs : [];
+            state.shifts = Array.isArray(loadedShifts) ? loadedShifts : [];
+
+            cleanBrokenData();
+        }
+
+        function cleanBrokenData() {
+            const validJobIds = new Set(state.jobs.map(job => job.id));
+
+            state.shifts = state.shifts.filter(shift => {
+                return shift && validJobIds.has(shift.jobId) && Number.isFinite(Number(shift.start)) && Number.isFinite(Number(shift.end)) && Number.isFinite(Number(shift.hours));
+            });
+
+            const ongoing = getOngoingShift();
+            if (ongoing && !validJobIds.has(ongoing.jobId)) {
+                clearOngoingShift();
+            }
         }
 
         function saveData() {
@@ -332,6 +371,7 @@
             if (pageId === 'pageHome') {
                 state.currentJobId = null;
                 stopTimer();
+                resetTimerView();
             }
         }
 
@@ -361,7 +401,7 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
-                .replace(/\"/g, '&quot;')
+                .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
 
@@ -423,11 +463,8 @@
                 return;
             }
 
-            if (shouldAskRetro) {
-                openModal('retroModal');
-            } else {
-                finalizeJobSave(true);
-            }
+            if (shouldAskRetro) openModal('retroModal');
+            else finalizeJobSave(true);
         }
 
         function readJobForm() {
@@ -449,9 +486,9 @@
 
         function validateJob(job) {
             if (!job.name) return 'הכנס שם עסק';
-            if (!job.rate || job.rate <= 0) return 'הכנס שכר שעתי תקין';
-            if (job.travel < 0) return 'נסיעות לא יכולות להיות מספר שלילי';
-            if (job.pension < 0 || job.pension > 100) return 'אחוז פנסיה לא תקין';
+            if (!Number.isFinite(job.rate) || job.rate <= 0) return 'הכנס שכר שעתי תקין';
+            if (!Number.isFinite(job.travel) || job.travel < 0) return 'נסיעות לא יכולות להיות מספר שלילי';
+            if (!Number.isFinite(job.pension) || job.pension < 0 || job.pension > 100) return 'אחוז פנסיה לא תקין';
             return null;
         }
 
@@ -482,8 +519,8 @@
         function showWarningsBeforeSave(warnings, shouldAskRetro) {
             const warningCards = warnings.map(warning => `
                 <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-3">
-                    <h4 class="font-black text-amber-800 mb-1">${warning.title}</h4>
-                    <p class="text-sm font-semibold text-slate-600 leading-relaxed">${warning.body}</p>
+                    <h4 class="font-black text-amber-800 mb-1">${escapeHtml(warning.title)}</h4>
+                    <p class="text-sm font-semibold text-slate-600 leading-relaxed">${escapeHtml(warning.body)}</p>
                 </div>
             `).join('');
 
@@ -506,11 +543,8 @@
 
             const jobIndex = state.jobs.findIndex(job => job.id === state.pendingJob.id);
 
-            if (jobIndex > -1) {
-                updateExistingJob(jobIndex, isRetro);
-            } else {
-                state.jobs.push(state.pendingJob);
-            }
+            if (jobIndex > -1) updateExistingJob(jobIndex, isRetro);
+            else state.jobs.push(state.pendingJob);
 
             const savedJobId = state.pendingJob.id;
             state.pendingJob = null;
@@ -530,12 +564,8 @@
 
             state.shifts.forEach(shift => {
                 if (shift.jobId !== jobId) return;
-
-                if (isRetro) {
-                    unlockShiftPaySettings(shift);
-                } else if (!shift.fixedRate) {
-                    lockShiftPaySettings(shift, oldJob);
-                }
+                if (isRetro) unlockShiftPaySettings(shift);
+                else if (!shift.fixedRate) lockShiftPaySettings(shift, oldJob);
             });
 
             state.jobs[jobIndex] = state.pendingJob;
@@ -605,7 +635,7 @@
             card.innerHTML = `
                 <div>
                     <h3 class="font-bold">${escapeHtml(job.name)}</h3>
-                    <p class="text-xs text-teal-600">₪${job.rate}/שעה · ${shiftsCount} משמרות</p>
+                    <p class="text-xs text-teal-600">₪${formatNumber(job.rate)}/שעה · ${shiftsCount} משמרות</p>
                 </div>
                 <span>←</span>
             `;
@@ -640,6 +670,11 @@
                 return;
             }
 
+            if (shift && shift.jobId !== state.currentJobId) {
+                alert('המשמרת הזו לא שייכת למקום העבודה הנוכחי');
+                return;
+            }
+
             $('shiftModalTitle').textContent = shiftId ? 'עריכת משמרת' : 'הוספת משמרת בדיעבד';
             $('deleteShiftBtn').classList.toggle('hidden', !shiftId);
             fillShiftForm(shift);
@@ -668,11 +703,8 @@
 
             const { start, end, hours } = shiftTimes;
 
-            if (state.editingShiftId) {
-                updateShift(state.editingShiftId, start, end, hours);
-            } else {
-                addShift(start, end, hours);
-            }
+            if (state.editingShiftId) updateShift(state.editingShiftId, start, end, hours);
+            else addShift(start, end, hours);
 
             state.editingShiftId = null;
             saveData();
@@ -694,7 +726,7 @@
             const end = getShiftEndDate(dateValue, startValue, endValue);
             const hours = (end - start) / 3600000;
 
-            if (hours <= 0 || hours > 24) {
+            if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
                 alert('משך משמרת לא תקין');
                 return null;
             }
@@ -726,6 +758,11 @@
                 return;
             }
 
+            if (state.shifts[index].jobId !== state.currentJobId) {
+                alert('לא ניתן לערוך משמרת שלא שייכת למקום העבודה הנוכחי');
+                return;
+            }
+
             state.shifts[index] = {
                 ...state.shifts[index],
                 start: start.getTime(),
@@ -736,6 +773,12 @@
 
         function deleteEditingShift() {
             if (!state.editingShiftId) return;
+
+            const shift = getShift(state.editingShiftId);
+            if (!shift || shift.jobId !== state.currentJobId) {
+                alert('לא ניתן למחוק משמרת שלא שייכת למקום העבודה הנוכחי');
+                return;
+            }
 
             const ok = confirm('למחוק את המשמרת הזו?');
             if (!ok) return;
@@ -759,33 +802,63 @@
 
             $('activeJobTitle').textContent = job.name;
 
-            const shifts = getJobShifts(jobId).sort((a, b) => b.start - a.start);
-            const totals = calculateJobTotals(job, shifts);
+            const allShifts = getJobShifts(jobId).slice().sort((a, b) => b.start - a.start);
+            const monthlyShifts = filterCurrentMonthShifts(allShifts);
+            const totals = calculateJobTotals(job, monthlyShifts);
 
             container.innerHTML = '';
 
-            if (shifts.length === 0) {
+            if (allShifts.length === 0) {
                 container.innerHTML = '<p class="text-center text-slate-400 text-sm font-bold">אין משמרות עדיין</p>';
             } else {
-                shifts.forEach(shift => container.appendChild(createShiftCard(job, shift)));
+                allShifts.forEach(shift => container.appendChild(createShiftCard(job, shift)));
             }
+
+            updateStats(totals, monthlyShifts);
+        }
+
+        function updateStats(totals, monthlyShifts) {
+            const hours = monthlyShifts.reduce((sum, shift) => sum + Number(shift.hours || 0), 0);
+            const shiftCount = monthlyShifts.length;
+            const avgNetPerShift = shiftCount > 0 ? totals.net / shiftCount : 0;
 
             $('statGross').textContent = formatMoney(totals.gross);
             $('statNet').textContent = formatMoney(totals.net);
+            $('statHours').textContent = hours.toFixed(2);
+            $('statShifts').textContent = String(shiftCount);
+            $('statAvgShift').textContent = formatMoney(avgNetPerShift);
+        }
+
+        function filterCurrentMonthShifts(shifts) {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            return shifts.filter(shift => {
+                const shiftDate = new Date(shift.start);
+                return shiftDate.getMonth() === currentMonth && shiftDate.getFullYear() === currentYear;
+            });
         }
 
         function clearJobTrackerView() {
             $('jobHistory').innerHTML = '';
             $('activeJobTitle').textContent = '';
+            resetTrackerStats();
+        }
+
+        function resetTrackerStats() {
             $('statGross').textContent = formatMoney(0);
             $('statNet').textContent = formatMoney(0);
+            $('statHours').textContent = '0.00';
+            $('statShifts').textContent = '0';
+            $('statAvgShift').textContent = formatMoney(0);
         }
 
         function createShiftCard(job, shift) {
             const start = new Date(shift.start);
             const end = new Date(shift.end);
             const rate = getShiftRate(job, shift);
-            const finalNet = calculateShiftFinalNet(job, shift);
+            const gross = calculateShiftGross(job, shift);
 
             const card = document.createElement('div');
             card.className = 'card p-4 mb-2';
@@ -793,10 +866,11 @@
                 <div class="flex justify-between items-start gap-3">
                     <div>
                         <p class="font-bold text-sm">${start.toLocaleDateString('he-IL')}</p>
-                        <p class="text-[10px] text-slate-400">${formatTime(start)}–${formatTime(end)} · ${Number(shift.hours).toFixed(2)} שעות · ₪${rate}/שעה</p>
+                        <p class="text-[10px] text-slate-400">${formatTime(start)}–${formatTime(end)} · ${Number(shift.hours).toFixed(2)} שעות · ₪${formatNumber(rate)}/שעה</p>
                     </div>
                     <div class="text-left">
-                        <div class="text-teal-600 font-black">${formatMoney(finalNet)}</div>
+                        <div class="text-teal-600 font-black">${formatMoney(gross)}</div>
+                        <p class="text-[10px] font-bold text-slate-400">ברוטו</p>
                         <button onclick="openShiftEditor('${shift.id}')" class="text-[11px] font-black text-slate-400 underline mt-1">ערוך</button>
                     </div>
                 </div>
@@ -819,12 +893,12 @@
 
         function checkOngoing() {
             const ongoing = getOngoingShift();
-            const btn = $('mainBtn');
 
             stopTimer();
 
             if (ongoing?.jobId === state.currentJobId) {
                 setMainButton('סיים משמרת', 'w-full py-5 rounded-2xl text-white font-black text-xl bg-red-500 shadow-xl transition-all');
+                $('liveGrossBox').classList.remove('hidden');
                 updateTimerDisplay(ongoing.start);
                 state.timerInterval = setInterval(() => updateTimerDisplay(ongoing.start), 1000);
                 return;
@@ -832,12 +906,12 @@
 
             if (ongoing && ongoing.jobId !== state.currentJobId) {
                 setMainButton('משמרת פעילה בעבודה אחרת', 'w-full py-5 rounded-2xl text-white font-black text-lg bg-slate-400 shadow-xl transition-all');
-                $('timerDisplay').textContent = '00:00:00';
+                resetTimerView();
                 return;
             }
 
             setMainButton('התחל משמרת', 'w-full py-5 rounded-2xl text-white font-black text-xl btn-primary shadow-xl transition-all');
-            $('timerDisplay').textContent = '00:00:00';
+            resetTimerView();
         }
 
         function setMainButton(text, className) {
@@ -847,16 +921,30 @@
         }
 
         function stopTimer() {
-            clearInterval(state.timerInterval);
+            if (state.timerInterval) clearInterval(state.timerInterval);
             state.timerInterval = null;
         }
 
+        function resetTimerView() {
+            $('timerDisplay').textContent = '00:00:00';
+            $('liveGrossBox').classList.add('hidden');
+            $('liveGrossAmount').textContent = formatMoney(0);
+        }
+
         function updateTimerDisplay(startTime) {
-            const diffSeconds = Math.floor((Date.now() - Number(startTime)) / 1000);
+            const diffSeconds = Math.max(0, Math.floor((Date.now() - Number(startTime)) / 1000));
             const hours = Math.floor(diffSeconds / 3600);
             const minutes = Math.floor((diffSeconds % 3600) / 60);
             const seconds = diffSeconds % 60;
+
             $('timerDisplay').textContent = `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
+            updateLiveGross(diffSeconds / 3600);
+        }
+
+        function updateLiveGross(hoursWorked) {
+            const job = getJob(state.currentJobId);
+            const gross = job ? hoursWorked * Number(job.rate || 0) : 0;
+            $('liveGrossAmount').textContent = formatMoney(gross);
         }
 
         $('mainBtn').onclick = function() {
@@ -881,6 +969,12 @@
         };
 
         function startShiftTimer() {
+            const job = getJob(state.currentJobId);
+            if (!job) {
+                alert('בחר מקום עבודה תקין לפני התחלת משמרת');
+                return;
+            }
+
             setOngoingShift({
                 start: Date.now(),
                 jobId: state.currentJobId
@@ -889,6 +983,14 @@
         }
 
         function finishShiftTimer(ongoing) {
+            const job = getJob(ongoing.jobId);
+            if (!job) {
+                alert('מקום העבודה של המשמרת הפעילה לא נמצא. המשמרת תבוטל כדי למנוע שמירת נתונים שגויים.');
+                clearOngoingShift();
+                refreshUI();
+                return;
+            }
+
             const durationMs = Date.now() - Number(ongoing.start);
 
             if (durationMs < 60000) {
@@ -917,14 +1019,15 @@
         // Salary / tax calculations
         // -----------------------------
         function calculateTax(gross, job, shift = null) {
+            const safeGross = Number(gross || 0);
             const pensionPercent = getShiftPension(job, shift);
-            const pension = gross * (pensionPercent / 100);
-            const nationalInsurance = calculateNationalInsurance(gross);
-            const incomeTax = calculateIncomeTax(gross, job);
+            const pension = safeGross * (pensionPercent / 100);
+            const nationalInsurance = calculateNationalInsurance(safeGross);
+            const incomeTax = calculateIncomeTax(safeGross, job);
 
             return {
-                gross,
-                net: gross - pension - nationalInsurance - incomeTax,
+                gross: safeGross,
+                net: safeGross - pension - nationalInsurance - incomeTax,
                 pension,
                 bl: nationalInsurance,
                 tax: incomeTax
@@ -938,7 +1041,7 @@
         }
 
         function calculateIncomeTax(gross, job) {
-            if (!job.isSingle) return gross * TAX.fallbackSecondJobTaxRate;
+            if (!job?.isSingle) return gross * TAX.fallbackSecondJobTaxRate;
 
             const creditPoints = getCreditPoints(job);
             const creditValue = creditPoints * TAX.creditPointValue;
@@ -946,20 +1049,22 @@
         }
 
         function getCreditPoints(job) {
-            const base = job.tax?.gender === 'female' ? TAX.femaleCreditPoints : TAX.maleCreditPoints;
-            const soldier = job.tax?.soldier ? TAX.releasedSoldierCreditPoints : 0;
+            const base = job?.tax?.gender === 'female' ? TAX.femaleCreditPoints : TAX.maleCreditPoints;
+            const soldier = job?.tax?.soldier ? TAX.releasedSoldierCreditPoints : 0;
             return base + soldier;
         }
 
         function calculateJobTotals(job, shifts) {
-            return shifts.reduce((totals, shift) => {
-                const gross = calculateShiftGross(job, shift);
-                const net = calculateShiftFinalNet(job, shift);
+            const totals = shifts.reduce((acc, shift) => {
+                acc.gross += calculateShiftGross(job, shift);
+                acc.travel += getShiftTravel(job, shift);
+                return acc;
+            }, { gross: 0, travel: 0, net: 0 });
 
-                totals.gross += gross;
-                totals.net += net;
-                return totals;
-            }, { gross: 0, net: 0 });
+            const taxResult = calculateTax(totals.gross, job);
+            totals.net = taxResult.net + totals.travel;
+
+            return totals;
         }
 
         function calculateShiftGross(job, shift) {
@@ -973,7 +1078,7 @@
         }
 
         function getShiftRate(job, shift) {
-            return shift.fixedRate !== undefined ? Number(shift.fixedRate) : Number(job.rate);
+            return shift.fixedRate !== undefined ? Number(shift.fixedRate) : Number(job.rate || 0);
         }
 
         function getShiftTravel(job, shift) {
@@ -981,27 +1086,31 @@
         }
 
         function getShiftPension(job, shift) {
-            return shift?.fixedPension !== undefined ? Number(shift.fixedPension) : Number(job.pension || 0);
+            return shift?.fixedPension !== undefined ? Number(shift.fixedPension) : Number(job?.pension || 0);
         }
 
         function showDetailedMonthlyNet() {
             const job = getJob(state.currentJobId);
             if (!job) return;
 
-            const shifts = getJobShifts(state.currentJobId);
+            const shifts = filterCurrentMonthShifts(getJobShifts(state.currentJobId));
             const gross = shifts.reduce((sum, shift) => sum + calculateShiftGross(job, shift), 0);
             const travel = shifts.reduce((sum, shift) => sum + getShiftTravel(job, shift), 0);
+            const totalHours = shifts.reduce((sum, shift) => sum + Number(shift.hours || 0), 0);
             const result = calculateTax(gross, job);
             const finalNet = result.net + travel;
+            const realHourlyNet = totalHours > 0 ? finalNet / totalHours : 0;
 
             showModalContent(`
-                <h3 class="text-xl font-black brand-text mb-4">ניתוח נטו משוער</h3>
+                <h3 class="text-xl font-black brand-text mb-4">ניתוח נטו משוער לחודש הנוכחי</h3>
                 <div class="space-y-2 text-sm font-bold text-slate-600">
                     <div class="flex justify-between"><span>ברוטו:</span><span>${formatMoney(result.gross)}</span></div>
                     <div class="flex justify-between"><span>פנסיה עובד:</span><span>${formatMoney(result.pension)}</span></div>
                     <div class="flex justify-between"><span>ביטוח לאומי/בריאות:</span><span>${formatMoney(result.bl)}</span></div>
                     <div class="flex justify-between"><span>מס הכנסה משוער:</span><span>${formatMoney(result.tax)}</span></div>
                     <div class="flex justify-between"><span>נסיעות:</span><span>${formatMoney(travel)}</span></div>
+                    <div class="flex justify-between"><span>שעות החודש:</span><span>${totalHours.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span>נטו ממוצע לשעה:</span><span>${formatMoney(realHourlyNet)}</span></div>
                     <hr class="my-3">
                     <div class="flex justify-between text-lg text-teal-700"><span>נטו משוער:</span><span>${formatMoney(finalNet)}</span></div>
                 </div>
@@ -1016,6 +1125,11 @@
         // -----------------------------
         function formatMoney(value) {
             return `₪${Number(value || 0).toFixed(2)}`;
+        }
+
+        function formatNumber(value) {
+            const number = Number(value || 0);
+            return Number.isInteger(number) ? String(number) : number.toFixed(2);
         }
 
         function pad2(value) {
