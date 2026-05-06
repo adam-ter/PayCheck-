@@ -124,13 +124,13 @@ export function getBestDay(job, shifts) {
 }
 
 export function calculateMonthlyForecast(totals, monthlyShifts) {
-  if (!monthlyShifts.length) return totals.travel;
+  if (!monthlyShifts.length) return 0;
 
   const now = new Date();
   const day = Math.max(now.getDate(), 1);
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-  return ((totals.net - totals.travel) / day * daysInMonth) + totals.travel;
+  return totals.net / day * daysInMonth;
 }
 
 export function generateMonthlyInsight(shifts, monthlyShifts, totals, avgHourly) {
@@ -164,13 +164,16 @@ export function calculateMonthlyStats(job, shifts) {
   const totalHours = monthlyShifts.reduce((sum, s) => sum + Number(s.hours || 0), 0);
   const avgHourly = totalHours ? totalNet / totalHours : 0;
 
+  const travelTotal = Number(job.travel || 0) * monthlyShifts.length;
+  const netTotal = totalNet + travelTotal;
+
   const totals = {
     gross: totalGross,
-    net: totalNet,
-    travel: Number(job.travel || 0),
+    net: netTotal,
+    travel: travelTotal,
     hours: totalHours,
     shifts: monthlyShifts.length,
-    avgShift: monthlyShifts.length ? (totalNet + (job.travel || 0)) / monthlyShifts.length : 0,
+    avgShift: monthlyShifts.length ? netTotal / monthlyShifts.length : 0,
     avgHourly
   };
 

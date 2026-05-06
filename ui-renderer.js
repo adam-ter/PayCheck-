@@ -183,7 +183,7 @@ function createShiftCard(job, shift, onEditShift) {
 export function updateStats(totals, monthlyShifts) {
   const hours = monthlyShifts.reduce((sum, s) => sum + Number(s.hours || 0), 0);
   const count = monthlyShifts.length;
-  const avgShift = count ? (totals.net - (totals.travel || 0)) / count : 0;
+  const avgShift = count ? totals.net / count : 0;
 
   $('statGross').textContent = formatMoney(totals.gross);
   $('statNet').textContent = formatMoney(totals.net);
@@ -357,15 +357,15 @@ export function fillJobForm(job, defaults) {
   } else {
     $('jName').value = '';
     $('jRate').value = '';
-    $('jTravel').value = defaults.travel;
+    $('jTravel').value = '';
     $('jGoalName').value = '';
     $('jMonthlyGoal').value = '';
-    $('jPenExist').checked = true;
-    $('jPenRate').value = defaults.pension;
+    $('jPenExist').checked = false;
+    $('jPenRate').value = '';
     $('jGender').value = 'male';
-    $('jResident').checked = true;
+    $('jResident').checked = false;
     $('jSoldier').checked = false;
-    $('jSingle').checked = true;
+    $('jSingle').checked = false;
     $('jCreditPoints').value = '';
     $('jTaxCoordinationRate').value = '';
   }
@@ -400,7 +400,7 @@ export function showDetailedNetAnalysis(job, shifts, monthlyShifts) {
     totalGross += calculateShiftGross(job, shift);
   });
 
-  const travel = Number(job.travel || 0);
+  const travel = Number(job.travel || 0) * monthlyShifts.length;
   const hours = monthlyShifts.reduce((sum, s) => sum + Number(s.hours || 0), 0);
   const taxInfo = calculateTax(totalGross, job);
   const finalNet = taxInfo.net + travel;
@@ -428,7 +428,7 @@ export function showDetailedNetAnalysis(job, shifts, monthlyShifts) {
         <span class="font-black">- ${formatMoney(taxInfo.tax)}</span>
       </div>
       <div class="flex justify-between text-green-600">
-        <span>החזר נסיעות חודשי:</span>
+        <span>החזר נסיעות:</span>
         <span class="font-black">+ ${formatMoney(travel)}</span>
       </div>
       <div class="flex justify-between text-slate-600">

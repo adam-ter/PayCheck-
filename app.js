@@ -50,12 +50,7 @@ import {
 } from './ui-renderer.js';
 
 // Constants
-const DEFAULTS = {
-  travel: 22.60,
-  pension: 6.0,
-  shiftStart: '09:00',
-  shiftEnd: '17:00'
-};
+const DEFAULTS = {};
 
 // Application state
 const state = {
@@ -654,7 +649,7 @@ function updateJobTrackerView() {
   const totals = calculateJobTotals(job, monthlyShifts);
 
   if (monthlyShifts.length > 0) {
-    totals.travel = Number(job.travel || 0);
+    totals.travel = Number(job.travel || 0) * monthlyShifts.length;
     totals.net += totals.travel;
   }
 
