@@ -1,0 +1,230 @@
+:root {
+  --brand-dark: #064e4b;
+  --brand-main: #0d9488;
+  --brand-light: #2dd4bf;
+  --brand-grad: linear-gradient(135deg, #064e4b 0%, #0d9488 50%, #2dd4bf 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Assistant', sans-serif;
+  background: #f8fafc;
+  color: #1e293b;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+input, select, textarea {
+  outline: none;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+.brand-text {
+  color: var(--brand-dark);
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.app-section {
+  display: none;
+}
+
+.app-section.active {
+  display: block;
+  animation: fadeIn 0.18s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(13, 148, 136, 0);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(13, 148, 136, 0.18);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(13, 148, 136, 0);
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.btn-primary {
+  background: var(--brand-grad);
+  color: white;
+  border-radius: 18px;
+  font-weight: 800;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.modal.active {
+  display: flex;
+}
+
+.danger-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 16px;
+  font-weight: 800;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(440px, calc(100% - 24px));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+  border-radius: 28px;
+  z-index: 60;
+  padding: 8px;
+}
+
+.nav-item {
+  border-radius: 20px;
+  padding: 8px 6px;
+  color: #94a3b8;
+  font-weight: 900;
+  font-size: 11px;
+  transition: 0.18s;
+}
+
+.nav-item.active {
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.weekly-hero {
+  background: linear-gradient(135deg, #064e4b 0%, #0d9488 60%, #2dd4bf 100%);
+  border-radius: 24px;
+  padding: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.weekly-hero::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: -30px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+}
+
+.weekly-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 90px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.monthly-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 6px 24px rgba(13, 148, 136, 0.1);
+  border: 1px solid rgba(13, 148, 136, 0.12);
+  overflow: hidden;
+}
+
+.monthly-accent-bar {
+  height: 5px;
+  background: linear-gradient(90deg, #064e4b, #0d9488, #2dd4bf);
+  border-radius: 0;
+}
+
+.monthly-kpi {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 18px;
+  padding: 14px 10px;
+  text-align: center;
+  border: 1px solid rgba(13, 148, 136, 0.12);
+  transition: transform 0.15s;
+}
+
+.monthly-kpi:active {
+  transform: scale(0.97);
+}
+
+.monthly-kpi-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.logo-ring {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(13, 148, 136, 0.15);
+  box-shadow: 0 0 0 6px rgba(13, 148, 136, 0.07), 0 12px 32px rgba(13, 148, 136, 0.18);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  overflow: hidden;
+  padding: 6px;
+}
